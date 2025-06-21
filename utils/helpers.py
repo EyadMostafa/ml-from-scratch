@@ -2,6 +2,35 @@ import numpy as np
 import pandas as pd
 
 def validate_transform_input(X, y = None):
+    """
+    Validate and transform input features and labels into numpy arrays.
+
+    Parameters
+    ----------
+    X : pd.DataFrame, pd.Series, or np.ndarray
+        Feature data to be validated and converted.
+    y : pd.DataFrame, pd.Series, np.ndarray, or None, default=None
+        Target labels to be validated and converted.
+
+    Returns
+    -------
+    tuple
+        Tuple containing:
+        - X: numpy.ndarray of shape (n_samples, n_features)
+        - y: numpy.ndarray of shape (n_samples,) or None if y was None
+
+    Raises
+    ------
+    ValueError
+        If inputs are not pandas DataFrame, Series, or numpy ndarray.
+        If y is not 1-dimensional.
+        If number of samples in X and y do not match.
+
+    Notes
+    -----
+    - If y has shape (n_samples, 1), it is flattened to (n_samples,).
+    - If y is None, returns (X, None).
+    """
     if(isinstance(X, (pd.DataFrame, pd.Series))):
         X = X.values
     elif not isinstance(X, np.ndarray):
