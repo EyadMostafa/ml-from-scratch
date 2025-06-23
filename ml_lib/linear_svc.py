@@ -31,9 +31,6 @@ class LinearSVC:
 
     Methods:
     --------
-    _hinge_loss_gradient(params, X, y)
-        Compute the gradient of the hinge loss plus L2 regularization with respect to weights and bias.
-
     fit(X, y)
         Fit the LinearSVC model according to the given training data.
     
@@ -72,7 +69,12 @@ class LinearSVC:
     def _hinge_loss_gradient(self, params, X, y):
         """
         Compute the gradient of the hinge loss plus L2 regularization with respect to weights and bias.
-    
+
+        Objective:
+        ----------
+        Calculate the gradient of w & b by deriving: 
+        J(w,b) = 1/2 w^2 + C ∑ max(0, 1-t_i(w x_i + b))
+
         Parameters:
         -----------
         params : list or tuple of np.ndarray
