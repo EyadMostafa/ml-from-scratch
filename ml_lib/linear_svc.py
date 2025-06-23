@@ -79,6 +79,8 @@ class LinearSVC:
         return np.array([dw, db], dtype=object)
 
     def fit(self, X, y):
+        if len(np.unique(y)) != 2:
+            raise ValueError("Kernelized SVC only supports binary classification.")
         X, y = self.__validate_transform_input(X, y)
         y = np.where(y <= 0, -1, 1) 
         n = X.shape[1]
@@ -97,8 +99,8 @@ class LinearSVC:
         )
         
     def predict(self, X):
+        X, _ = self.__validate_transform_input(X)
         if self.w_ is None or self.b_ is None:
             raise ValueError("Model has not been fitted yet. Call 'fit' before 'predict'.")
-        X, _ = self.__validate_transform_input(X)
         predictions = X @ self.w_ + self.b_
         return np.where(predictions >= 0, 1, 0)
