@@ -31,6 +31,9 @@ class LinearSVC:
 
     Methods:
     --------
+    _hinge_loss_gradient(params, X, y)
+        Compute the gradient of the hinge loss plus L2 regularization with respect to weights and bias.
+
     fit(X, y)
         Fit the LinearSVC model according to the given training data.
     
@@ -38,15 +41,33 @@ class LinearSVC:
         Predict class labels for samples in X.
     """
     def __init__(self, C=1.0, learning_rate=0.01, max_iter=1000, tol=1e-4) -> None:
-        self.C = C
-        self.learning_rate = learning_rate
-        self.max_iter = max_iter
-        self.tol = tol
-        self.w_ = None
-        self.b_ = None
+        self.__C = C
+        self.__learning_rate = learning_rate
+        self.__max_iter = max_iter
+        self.__tol = tol
+        self.__w = None
+        self.__b = None
 
     __validate_transform_input = staticmethod(validate_transform_input)
     __gradient_descent = staticmethod(gradient_descent)
+
+    def get_params(self):
+        return {
+            'C' : self.__C,
+            'learning_rate': self.__learning_rate,
+            'max_iter': self.__max_iter,
+            'tol': self.__tol,
+            'w': self.__w, 
+            'b': self.__b
+        }
+    
+    def set_params(self, **params):
+        for key, value in params.items():
+           if(hasattr(self, f'_{self.__class__.__name__}__{key}')):
+               setattr(self, f'_{self.__class__.__name__}__{key}', value)
+           else:
+               raise ValueError(f"Parameter '{key}' is not valid for {self.__class__.__name__}.")
+        return self
 
     def _hinge_loss_gradient(self, params, X, y):
         """
@@ -73,8 +94,8 @@ class LinearSVC:
         margin = X @ w + b
         mask = margin <= 1
 
-        dw = w - self.C * y[mask] @ X[mask]
-        db = -self.C * np.sum(y[mask])
+        dw = w - self.__C * y[mask] @ X[mask]
+        db = -self.__C * np.sum(y[mask])
 
         return np.array([dw, db], dtype=object)
 
@@ -85,22 +106,22 @@ class LinearSVC:
         y = np.where(y <= 0, -1, 1) 
         n = X.shape[1]
 
-        self.w_ = np.zeros(n)
-        self.b_ = 0.0
+        self.__w = np.zeros(n)
+        self.__b = 0.0
 
-        self.w_, self.b_ = self.__gradient_descent(
+        self.__w, self.__b = self.__gradient_descent(
             gradient_fn=self._hinge_loss_gradient,
-            params=np.array([self.w_, self.b_], dtype=object),
-            learning_rate=self.learning_rate,
-            max_iter=self.max_iter,
-            tol=self.tol,
+            params=np.array([self.__w, self.__b], dtype=object),
+            learning_rate=self.__learning_rate,
+            max_iter=self.__max_iter,
+            tol=self.__tol,
             features=X,
             labels=y
         )
         
     def predict(self, X):
         X, _ = self.__validate_transform_input(X)
-        if self.w_ is None or self.b_ is None:
+        if self.__w is None or self.__b is None:
             raise ValueError("Model has not been fitted yet. Call 'fit' before 'predict'.")
-        predictions = X @ self.w_ + self.b_
+        predictions = X @ self.__w + self.__b
         return np.where(predictions >= 0, 1, 0)

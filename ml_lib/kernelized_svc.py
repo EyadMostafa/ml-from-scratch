@@ -7,8 +7,8 @@ class KernelizedSVC:
     def __init__(self, kernel='linear', C=1.0, gamma='scale', degree=3, coef0=0.0):
         self.__X = None
         self.__y = None
-        self.kernel = kernel
-        self.C = C
+        self.__kernel = kernel
+        self.__C = C
         self.__gamma = gamma
         self.__degree = degree
         self.__coef0 = coef0
@@ -21,8 +21,8 @@ class KernelizedSVC:
 
     def get_params(self):
         return {
-            'kernel': self.kernel,
-            'C': self.C,
+            'kernel': self.__kernel,
+            'C': self.__C,
             'gamma': self.__gamma,
             'degree': self.__degree,
             'coef0': self.__coef0
@@ -37,17 +37,19 @@ class KernelizedSVC:
         return self
 
     def __compute_kernel_matrix(self, X1, X2):
-        if self.kernel == 'linear':
-            return X1 @ X2.T        
-        elif self.kernel == 'poly':
+        if self.__kernel == 'linear':
+            return X1 @ X2.T     
+           
+        elif self.__kernel == 'poly':
             return (self.__gamma * (X1 @ X2.T) + self.__coef0) ** self.__degree
         
-        elif self.kernel == 'rbf':
+        elif self.__kernel == 'rbf':
             sq_dists = np.sum(X1**2, axis=1).reshape(-1, 1) + np.sum(X2**2, axis=1) - 2 * (X1 @ X2.T)
             sq_dists = np.maximum(sq_dists, 0)
             return np.exp(-self.__gamma * sq_dists)
+
         else:
-            raise ValueError("Unsupported kernel type. Use 'linear', 'poly', or 'rbf'.")
+            raise ValueError("Unsupported kernel type. Use 'linear', 'poly', 'rbf', or 'sigmoid'.")
 
 
     def __compute_alpha(self):
@@ -56,7 +58,7 @@ class KernelizedSVC:
         H = np.outer(self.__y, self.__y) * K
         f = -np.ones(m)
         A = np.vstack([np.eye(m), -np.eye(m)])
-        b = np.hstack([self.C * np.ones(m), np.zeros(m)])
+        b = np.hstack([self.__C * np.ones(m), np.zeros(m)])
         A_eq = self.__y.reshape(1, -1)
         b_eq = np.array([0.0])
 
@@ -82,7 +84,7 @@ class KernelizedSVC:
 
         self.__y = np.where(self.__y <= 0, -1, 1)
         self.__alphas = self.__compute_alpha()
-        self.__support_idx = np.where((self.__alphas > 1e-5) & (self.__alphas < self.C - 1e-5))[0]
+        self.__support_idx = np.where((self.__alphas > 1e-5) & (self.__alphas < self.__C - 1e-5))[0]
         
         b_vals = []
         for i in self.__support_idx:
