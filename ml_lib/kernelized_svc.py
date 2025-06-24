@@ -131,7 +131,7 @@ class KernelizedSVC:
             return np.exp(-self.__gamma * sq_dists)
 
         else:
-            raise ValueError("Unsupported kernel type. Use 'linear', 'poly', 'rbf', or 'sigmoid'.")
+            raise ValueError("Unsupported kernel type. Use 'linear', 'poly', 'rbf'.")
 
 
     def __compute_alpha(self):
