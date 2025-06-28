@@ -6,16 +6,24 @@ class BaseModel(ABC):
         pass
 
     _validate_transform_input = staticmethod(validate_transform_input)
-    
+        
     def get_params(self):
         cls_name = self.__class__.__name__
-        prefix = f"_{cls_name}__"
-        return {
-            attr[len(prefix):]: value
-            for attr, value in self.__dict__.items()
-            if attr.startswith(prefix)
-        }
-
+        private_prefix = f"_{cls_name}__"
+        params = {}
+    
+        for attr, value in self.__dict__.items():
+            if attr.startswith(private_prefix):
+                clean_name = attr[len(private_prefix):]
+            elif not attr.startswith('__'):
+                clean_name = attr.lstrip('_')
+            else:
+                continue
+    
+            params[clean_name] = value
+    
+        return params
+    
     
     def set_params(self, **params):
         for key, value in params.items():
