@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib as plt
 
 def validate_transform_input(X, y = None):
     """
@@ -54,4 +55,40 @@ def validate_transform_input(X, y = None):
     
     return X, y
 
+
+def plot_decision_boundary(clf, X, y, ax, title):
+    x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].min() + 0.5 
+    y_min, y_max = X[:, 1].max() - 0.5, X[:, 1].max() + 0.5
+
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 300),
+                         np.linspace(y_min, y_max))
+
+    Z = clf.predict(np.c_(xx.ravel(), yy.ravel()))
+    Z = Z.reshape(xx.shape)
+
+    ax.contourf(xx, yy, Z, alpha=0.8, cmap=plt.cm.coolwarm)
+    colors = ["blue", "red"]
+
+    for val in np.unique(y):
+        ax.scatter(X[y==val, 0], X[y==val, 1], c=colors[val], label="Class {val}", edgecolor="-k") 
+
+    ax.set_title(title)
+    ax.legend()
+
+def plot_decision_boundary(clf, X, y, ax, title):
+    x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
+    y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 300),
+                         np.linspace(y_min, y_max, 300))
+    Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+
+    ax.contourf(xx, yy, Z, alpha=0.8, cmap=plt.cm.coolwarm)
+    colors = ['blue', 'red']
+
+    for val in np.unique(y):
+        ax.scatter(X[y == val, 0], X[y == val, 1], c=colors[val], label=f'Class {val}', edgecolor='k')
+    
+    ax.set_title(title)
+    ax.legend()
 
