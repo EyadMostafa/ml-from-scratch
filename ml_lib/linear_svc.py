@@ -1,9 +1,9 @@
 import numpy as np
-import pandas as pd
 from utils.optimizers import gradient_descent
 from utils.helpers import validate_transform_input
+from .base_model import BaseModel
 
-class LinearSVC:
+class LinearSVC(BaseModel):
     """
     Linear Support Vector Classifier implemented with batch gradient descent and hinge loss.
 
@@ -45,26 +45,7 @@ class LinearSVC:
         self.__w = None
         self.__b = None
 
-    __validate_transform_input = staticmethod(validate_transform_input)
     __gradient_descent = staticmethod(gradient_descent)
-
-    def get_params(self):
-        return {
-            'C' : self.__C,
-            'learning_rate': self.__learning_rate,
-            'max_iter': self.__max_iter,
-            'tol': self.__tol,
-            'w': self.__w, 
-            'b': self.__b
-        }
-    
-    def set_params(self, **params):
-        for key, value in params.items():
-           if(hasattr(self, f'_{self.__class__.__name__}__{key}')):
-               setattr(self, f'_{self.__class__.__name__}__{key}', value)
-           else:
-               raise ValueError(f"Parameter '{key}' is not valid for {self.__class__.__name__}.")
-        return self
 
     def _hinge_loss_gradient(self, params, X, y):
         """
@@ -104,7 +85,7 @@ class LinearSVC:
     def fit(self, X, y):
         if len(np.unique(y)) != 2:
             raise ValueError("Kernelized SVC only supports binary classification.")
-        X, y = self.__validate_transform_input(X, y)
+        X, y = self._validate_transform_input(X, y)
         y = np.where(y <= 0, -1, 1) 
         n = X.shape[1]
 
@@ -122,7 +103,7 @@ class LinearSVC:
         )
         
     def predict(self, X):
-        X, _ = self.__validate_transform_input(X)
+        X, _ = self._validate_transform_input(X)
         if self.__w is None or self.__b is None:
             raise ValueError("Model has not been fitted yet. Call 'fit' before 'predict'.")
         predictions = X @ self.__w + self.__b

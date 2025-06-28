@@ -1,9 +1,9 @@
 import numpy as np
-import pandas as pd
 from cvxopt import matrix, solvers
 from utils.helpers import validate_transform_input
+from .base_model import BaseModel
 
-class KernelizedSVC:
+class KernelizedSVC(BaseModel):
     """
     Support Vector Classifier with kernel support implemented from scratch.
 
@@ -78,25 +78,6 @@ class KernelizedSVC:
         self.__b = None
         self.__support_idx = None
 
-    __validate_transform_input = staticmethod(validate_transform_input)
-
-    def get_params(self):
-        return {
-            'kernel': self.__kernel,
-            'C': self.__C,
-            'gamma': self.__gamma,
-            'degree': self.__degree,
-            'coef0': self.__coef0
-        }
-    
-    def set_params(self, **params):
-        for key, value in params.items():
-            if hasattr(self, f'_{self.__class__.__name__}__{key}'):
-                setattr(self, f'_{self.__class__.__name__}__{key}', value)
-            else:
-                raise ValueError(f"Parameter '{key}' is not valid for {self.__class__.__name__}.")
-        return self
-
     def __compute_kernel_matrix(self, X1, X2):
         """
         Compute the kernel (Gram) matrix between two datasets using the specified kernel.
@@ -170,7 +151,7 @@ class KernelizedSVC:
         return alphas
     
     def fit(self, X, y):
-        self.__X, self.__y = self.__validate_transform_input(X, y)
+        self.__X, self.__y = self._validate_transform_input(X, y)
         if len(np.unique(y)) != 2:
             raise ValueError("Kernelized SVC only supports binary classification.")
         
@@ -189,7 +170,7 @@ class KernelizedSVC:
 
 
     def predict(self, X):
-        X, _ = self.__validate_transform_input(X)
+        X, _ = self._validate_transform_input(X)
         if self.__alphas is None or self.__b is None:
             raise ValueError("Model has not been fitted yet. Call 'fit' before 'predict'.")
         kernel_matrix_test = self.__compute_kernel_matrix(self.__X, X)
