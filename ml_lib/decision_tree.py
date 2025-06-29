@@ -2,31 +2,20 @@ import numpy as np
 from abc import abstractmethod
 from .base_model import BaseModel
 
-class DecisionTreeBase(BaseModel):
-    def __init__(self,
-                 max_depth=None,
-                 min_samples_split=2,
-                 min_samples_leaf=1,
-                 max_features=None):
-        self._max_depth = max_depth
-        self._min_samples_split = min_samples_split
-        self._min_samples_leaf = min_samples_leaf
-        self._max_features = max_features
-
-    @abstractmethod 
-    def _compute_impurity(self, left, right):
-        pass
-
-    @abstractmethod
-    def _best_split(self, X, y):
-        pass
-    
-    @abstractmethod
-    def _build_tree(self, X, y):
-        pass
-
-
 class TreeNode:
+    """
+    A node in the decision tree.
+
+    Attributes:
+        _impurity (float): Impurity of the node (e.g., Gini index).
+        _samples (int): Number of samples at the node.
+        _values (ndarray): Class distribution at the node.
+        _label (any): Predicted label (majority class) at the node.
+        _feature_idx (int): Index of the feature used for the split.
+        _threshold (float): Threshold value for the split.
+        _left_node (TreeNode): Left child node.
+        _right_node (TreeNode): Right child node.
+    """
     def __init__(self,
                  impurity=None, 
                  samples=None,
@@ -42,25 +31,98 @@ class TreeNode:
         self._right_node = None
 
     def _is_leaf(self):
+        """Check if the current node is a leaf (no children)."""
         return self._left_node is None and self._right_node is None
+    
+
+
+
+class DecisionTreeBase(BaseModel):
+    """
+    Abstract base class for decision tree implementations.
+
+    Parameters:
+        max_depth (int): Maximum depth of the tree.
+        min_samples_split (int): Minimum number of samples required to split a node.
+        min_samples_leaf (int): Minimum number of samples required at a leaf node.
+        max_features (int): Number of features to consider when looking for the best split.
+    """
+    def __init__(self,
+                 max_depth=None,
+                 min_samples_split=2,
+                 min_samples_leaf=1,
+                 max_features=None):
+        self._max_depth = max_depth
+        self._min_samples_split = min_samples_split
+        self._min_samples_leaf = min_samples_leaf
+        self._max_features = max_features
+
+    @abstractmethod 
+    def _compute_impurity(self, values_left, values_right, samples_left, samples_right):
+        """
+            Compute the impurity for a proposed split.
+     
+            Returns:
+                tuple: (impurity_left, impurity_right)
+        """
+        pass
+
+    @abstractmethod
+    def _best_split(self, X, y):
+        """
+        Find the best feature and threshold to split the data.
+
+        Returns:
+            dict: Best split details.
+        """
+        pass
+    
+    @abstractmethod
+    def _build_tree(self, X, y, node, depth=0):
+        """
+        Recursively build the decision tree.
+        """
+        pass
+
+
 
 
 class DecisionTreeClassifier(DecisionTreeBase):
+    """
+    A decision tree classifier.
+
+    Inherits from DecisionTreeBase and implements a basic CART algorithm decision tree.
+    """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.__labels = None
-        self._root = None
+        self.__root = None
 
     def _majority_label(self, y):
+        """
+        Determine the majority class in an array of labels.
+
+        Args:
+            y (ndarray): Array of class labels.
+
+        Returns:
+            Majority class label.
+        """
         values, counts = np.unique(y, return_counts=True)
         return values[np.argmax(counts)]
 
     def _compute_impurity(self, values_left, values_right, samples_left, samples_right):
+        """
+        Compute Gini impurity for left and right splits.
+
+        Returns:
+            tuple: (left_impurity, right_impurity)
+        """
         squared_probs_left = (values_left/samples_left)**2 if samples_left > 0 else 0
         squared_probs_right = (values_right/samples_right)**2 if samples_right > 0 else 0
 
-        left_impurity = 1 - np.sum(squared_probs_left)
-        right_impurity = 1 - np.sum(squared_probs_right)
+        left_impurity = np.round(1 - np.sum(squared_probs_left), 3)
+        right_impurity = np.round(1 - np.sum(squared_probs_right), 3)
 
         return left_impurity, right_impurity
 
@@ -134,7 +196,7 @@ class DecisionTreeClassifier(DecisionTreeBase):
                }
 
 
-    def _build_tree(self, X, y, node, depth=1):
+    def _build_tree(self, X, y, node, depth=0):
 
         if (self._max_depth != None and depth >= self._max_depth
            or len(y) < self._min_samples_split
@@ -173,16 +235,29 @@ class DecisionTreeClassifier(DecisionTreeBase):
     def fit(self, X, y):
         X, y = self._validate_transform_input(X, y)
         self.__labels = np.unique(y)
-        self._root = TreeNode(
-            impurity=1.0,
+
+        values = np.array([(y == val).sum() for val in self.__labels])
+        initial_impurity, _ = self._compute_impurity(values, [0,0,0], y.shape[0], 0)
+        self.__root = TreeNode(
+            impurity=initial_impurity,
             samples=len(y),
             values=np.array([(y == val).sum() for val in self.__labels]),
             label=self._majority_label(y)
         )
-        self._build_tree(X, y, self._root)
+        self._build_tree(X, y, self.__root)
 
 
     def _traverse(self, x, node):
+        """
+        Traverse the tree to predict the label for a single sample.
+
+        Args:
+            x (ndarray): Input sample.
+            node (TreeNode): Current node in the tree.
+
+        Returns:
+            Predicted label.
+        """
         if node._is_leaf():
             return node._label
         if x[node._feature_idx] <= node._threshold:
@@ -192,7 +267,7 @@ class DecisionTreeClassifier(DecisionTreeBase):
         
     def predict(self, X):
         X, _ = self._validate_transform_input(X)
-        return np.array([self._traverse(x, self._root) for x in X])
+        return np.array([self._traverse(x, self.__root) for x in X])
 
 
 

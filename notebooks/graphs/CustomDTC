@@ -1,0 +1,116 @@
+digraph {
+	0 [label="[X7 ≤ 0.05]
+Gini: 0.467
+Samples: 455
+Values: [169 286]"]
+	1 [label="[X20 ≤ 16.83]
+Gini: 0.107
+Samples: 282
+Values: [ 16 266]"]
+	0 -> 1 [label=True]
+	2 [label="[X10 ≤ 0.63]
+Gini: 0.037
+Samples: 263
+Values: [  5 258]"]
+	1 -> 2 [label=True]
+	3 [label="[X24 ≤ 0.18]
+Gini: 0.023
+Samples: 260
+Values: [  3 257]"]
+	2 -> 3 [label=True]
+	4 [label="Predict: 1
+Gini: 0.015
+Samples: 259
+Values: [  2 257]"]
+	3 -> 4 [label=True]
+	5 [label="Predict: 0
+Gini: 0.000
+Samples: 1
+Values: [1 0]"]
+	3 -> 5 [label=False]
+	6 [label="[X4 ≤ 0.09]
+Gini: 0.444
+Samples: 3
+Values: [2 1]"]
+	2 -> 6 [label=False]
+	7 [label="Predict: 1
+Gini: 0.000
+Samples: 1
+Values: [0 1]"]
+	6 -> 7 [label=True]
+	8 [label="Predict: 0
+Gini: 0.000
+Samples: 2
+Values: [2 0]"]
+	6 -> 8 [label=False]
+	9 [label="[X1 ≤ 16.19]
+Gini: 0.488
+Samples: 19
+Values: [11  8]"]
+	1 -> 9 [label=False]
+	10 [label="Predict: 1
+Gini: 0.000
+Samples: 6
+Values: [0 6]"]
+	9 -> 10 [label=True]
+	11 [label="[X17 ≤ 0.01]
+Gini: 0.260
+Samples: 13
+Values: [11  2]"]
+	9 -> 11 [label=False]
+	12 [label="Predict: 0
+Gini: 0.000
+Samples: 11
+Values: [11  0]"]
+	11 -> 12 [label=True]
+	13 [label="Predict: 1
+Gini: 0.000
+Samples: 2
+Values: [0 2]"]
+	11 -> 13 [label=False]
+	14 [label="[X27 ≤ 0.15]
+Gini: 0.204
+Samples: 173
+Values: [153  20]"]
+	0 -> 14 [label=False]
+	15 [label="[X22 ≤ 115.25]
+Gini: 0.500
+Samples: 35
+Values: [17 18]"]
+	14 -> 15 [label=True]
+	16 [label="[X1 ≤ 21.05]
+Gini: 0.298
+Samples: 22
+Values: [ 4 18]"]
+	15 -> 16 [label=True]
+	17 [label="Predict: 1
+Gini: 0.000
+Samples: 18
+Values: [ 0 18]"]
+	16 -> 17 [label=True]
+	18 [label="Predict: 0
+Gini: 0.000
+Samples: 4
+Values: [4 0]"]
+	16 -> 18 [label=False]
+	19 [label="Predict: 0
+Gini: 0.000
+Samples: 13
+Values: [13  0]"]
+	15 -> 19 [label=False]
+	20 [label="[X16 ≤ 0.14]
+Gini: 0.029
+Samples: 138
+Values: [136   2]"]
+	14 -> 20 [label=False]
+	21 [label="Predict: 0
+Gini: 0.000
+Samples: 136
+Values: [136   0]"]
+	20 -> 21 [label=True]
+	22 [label="Predict: 1
+Gini: 0.000
+Samples: 2
+Values: [0 2]"]
+	20 -> 22 [label=False]
+}
