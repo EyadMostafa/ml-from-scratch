@@ -5,37 +5,24 @@ from .base_model import BaseModel
 
 class LinearSVC(BaseModel):
     """
-    Linear Support Vector Classifier implemented with batch gradient descent and hinge loss.
+    Linear Support Vector Classifier.
+
+    This model minimizes hinge loss with L2 regularization using batch gradient descent.
+    It supports binary classification and learns a linear decision boundary.
 
     Parameters:
-    -----------
-    C : float, default=1.0
-        Regularization parameter. The strength of the regularization is inversely proportional to C.
-    
-    learning_rate : float, default=0.01
-        Step size for gradient descent updates.
-    
-    max_iter : int, default=1000
-        Maximum number of iterations for the gradient descent optimization.
-    
-    tol : float, default=1e-4
-        Tolerance for the stopping criterion. Optimization stops when the norm of the gradient is below this value.
+        C (float): Regularization strength (inverse). Higher values reduce regularization.
+        learning_rate (float): Step size for gradient descent updates.
+        max_iter (int): Maximum number of gradient descent iterations.
+        tol (float): Tolerance for stopping criteria based on gradient norm.
 
     Attributes:
-    -----------
-    _w : np.ndarray
-        Learned weight vector after fitting.
-    
-    _b : float
-        Learned bias term after fitting.
+        _w (ndarray): Learned weight vector.
+        _b (float): Learned bias term.
 
     Methods:
-    --------
-    fit(X, y)
-        Fit the LinearSVC model according to the given training data.
-    
-    predict(X)
-        Predict class labels for samples in X.
+        fit(X, y): Train the model using hinge loss on binary-labeled data.
+        predict(X): Predict class labels for input samples.
     """
     def __init__(self, C=1.0, learning_rate=0.01, max_iter=1000, tol=1e-4) -> None:
         self.__C = C
@@ -49,29 +36,16 @@ class LinearSVC(BaseModel):
 
     def _hinge_loss_gradient(self, params, X, y):
         """
-        Compute the gradient of the hinge loss plus L2 regularization with respect to weights and bias.
-
-        Objective:
-        ----------
-        Calculate the gradient of w & b by deriving: 
-        J(w,b) = 1/2 w^2 + C ∑ max(0, 1-t_i(w x_i + b))
+        Compute gradients of hinge loss with L2 regularization.
 
         Parameters:
-        -----------
-        params : list or tuple of np.ndarray
-            Current parameters [weights, bias].
-        
-        X : np.ndarray
-            Feature matrix (n_samples, n_features).
-        
-        y : np.ndarray
-            Target labels encoded as {-1, 1} (n_samples,).
-    
+            params (list or tuple): Current model parameters [weights, bias].
+            X (ndarray): Feature matrix of shape (n_samples, n_features).
+            y (ndarray): Binary labels in {-1, 1} of shape (n_samples,).
+
         Returns:
-        --------
-        gradients : np.ndarray
-            Gradients for weights and bias as a numpy array of objects [dw, db].
-       """
+            gradients (ndarray): Gradients [dw, db] as an array of objects.
+        """
         w, b = params
 
         margin = X @ w + b
@@ -83,6 +57,13 @@ class LinearSVC(BaseModel):
         return np.array([dw, db], dtype=object)
 
     def fit(self, X, y):
+        """
+        Train the linear SVM using gradient descent.
+
+        Parameters:
+            X (ndarray): Training feature matrix.
+            y (ndarray): Binary target labels (0 or 1).
+        """
         if len(np.unique(y)) != 2:
             raise ValueError("Kernelized SVC only supports binary classification.")
         X, y = self._validate_transform_input(X, y)
@@ -103,6 +84,15 @@ class LinearSVC(BaseModel):
         )
         
     def predict(self, X):
+        """
+        Predict binary class labels for input samples.
+
+        Parameters:
+            X (ndarray): Input feature matrix.
+
+        Returns:
+            preds (ndarray): Predicted class labels (0 or 1).
+        """
         X, _ = self._validate_transform_input(X)
         if self.__w is None or self.__b is None:
             raise ValueError("Model has not been fitted yet. Call 'fit' before 'predict'.")

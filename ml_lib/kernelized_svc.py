@@ -5,67 +5,33 @@ from .base_model import BaseModel
 
 class KernelizedSVC(BaseModel):
     """
-    Support Vector Classifier with kernel support implemented from scratch.
+    Support Vector Classifier with kernel support.
 
-    This class implements a binary classification Support Vector Machine (SVM)
-    using different kernel functions and quadratic programming (via CVXOPT) to solve
-    the dual optimization problem.
+    This binary classifier solves the dual form of the SVM problem using quadratic programming 
+    and supports multiple kernel types.
 
-    Parameters
-    ----------
-    kernel : str, default='linear'
-        The kernel type to be used in the algorithm. Must be one of:
-        'linear', 'poly', or 'rbf'.
-    
-    C : float, default=1.0
-        Regularization parameter. The strength of the regularization is inversely 
-        proportional to C. Must be strictly positive.
-    
-    gamma : {'scale', float}, default='scale'
-        Kernel coefficient for 'rbf' and 'poly'. If 'scale', it uses 
-        1 / (n_features * X.var()).
+    Parameters:
+        kernel (str): Kernel type to use. Options: 'linear', 'poly', 'rbf'.
+        C (float): Regularization parameter. Must be > 0.
+        gamma (float or 'scale'): Kernel coefficient for 'rbf' and 'poly'.
+        degree (int): Degree of the polynomial kernel (only used if kernel='poly').
+        coef0 (float): Independent term in polynomial kernel (only used if kernel='poly').
 
-    degree : int, default=3
-        Degree of the polynomial kernel function ('poly'). Ignored by other kernels.
-    
-    coef0 : float, default=0.0
-        Independent term in polynomial kernel. Ignored by other kernels.
+    Attributes:
+        __X (ndarray): Training features.
+        __y (ndarray): Binary training labels (converted to -1 and 1).
+        __alphas (ndarray): Lagrange multipliers.
+        __b (float): Bias term.
+        __support_idx (ndarray): Indices of support vectors.
+        __kernel_matrix (ndarray): Precomputed Gram matrix.
 
-    Attributes
-    ----------
-    __X : ndarray
-        Training feature matrix.
-
-    __y : ndarray
-        Training label vector (converted to -1 and 1).
-
-    __kernel_matrix : ndarray
-        Precomputed Gram matrix using the chosen kernel function.
-
-    __alphas : ndarray
-        Solution to the dual problem (Lagrange multipliers).
-
-    __b : float
-        Bias term of the decision function.
-
-    __support_idx : ndarray
-        Indices of support vectors used in bias computation.
-
-    Methods
-    -------
-    fit(X, y)
-        Fits the SVM model on training data.
-    
-    predict(X)
-        Predicts class labels for input samples.
-
-    get_params()
-        Returns the current hyperparameters as a dictionary.
-
-    set_params(**params)
-        Sets the hyperparameters of the model.
+    Methods:
+        fit(X, y): Train the SVM on input data.
+        predict(X): Predict class labels for input samples.
+        get_params(): Return model hyperparameters.
+        set_params(**params): Update model hyperparameters.
     """
-    def __init__(self, kernel='linear', C=1.0, gamma='scale', degree=3, coef0=0.0):
+    def __init__(self, kernel='rbf', C=1.0, gamma='scale', degree=3, coef0=0.0):
         self.__X = None
         self.__y = None
         self.__kernel = kernel
@@ -80,25 +46,14 @@ class KernelizedSVC(BaseModel):
 
     def __compute_kernel_matrix(self, X1, X2):
         """
-        Compute the kernel (Gram) matrix between two datasets using the specified kernel.
-    
-        Parameters
-        ----------
-        X1 : ndarray of shape (n_samples_1, n_features)
-            First input dataset.
-    
-        X2 : ndarray of shape (n_samples_2, n_features)
-            Second input dataset.
-    
-        Returns
-        -------
-        K : ndarray of shape (n_samples_1, n_samples_2)
-            Computed kernel matrix.
-    
-        Raises
-        ------
-        ValueError
-        If an unsupported kernel type is specified.
+        Compute the kernel (Gram) matrix using the selected kernel.
+
+        Parameters:
+            X1 (ndarray): Input data of shape (n_samples_1, n_features).
+            X2 (ndarray): Input data of shape (n_samples_2, n_features).
+
+        Returns:
+            K (ndarray): Kernel matrix of shape (n_samples_1, n_samples_2).
         """
         if self.__kernel == 'linear':
             return X1 @ X2.T     
@@ -151,6 +106,13 @@ class KernelizedSVC(BaseModel):
         return alphas
     
     def fit(self, X, y):
+        """
+        Train the kernel SVM on input data.
+
+        Parameters:
+            X (ndarray): Training feature matrix.
+            y (ndarray): Training labels (binary).
+        """
         self.__X, self.__y = self._validate_transform_input(X, y)
         if len(np.unique(y)) != 2:
             raise ValueError("Kernelized SVC only supports binary classification.")
@@ -170,6 +132,15 @@ class KernelizedSVC(BaseModel):
 
 
     def predict(self, X):
+        """
+        Predict class labels for input samples.
+
+        Parameters:
+            X (ndarray): Input samples of shape (n_samples, n_features).
+
+        Returns:
+            preds (ndarray): Predicted class labels (0 or 1).
+        """
         X, _ = self._validate_transform_input(X)
         if self.__alphas is None or self.__b is None:
             raise ValueError("Model has not been fitted yet. Call 'fit' before 'predict'.")

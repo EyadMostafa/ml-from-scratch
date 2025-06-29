@@ -6,6 +6,9 @@ class TreeNode:
     """
     A node in the decision tree.
 
+    Stores information about a decision or leaf node, including impurity,
+    sample count, predicted label, split criteria, and child nodes.
+
     Attributes:
         _impurity (float): Impurity of the node (e.g., Gini index).
         _samples (int): Number of samples at the node.
@@ -41,6 +44,8 @@ class DecisionTreeBase(BaseModel):
     """
     Abstract base class for decision tree implementations.
 
+    Provides core configuration and interface for building decision trees.
+
     Parameters:
         max_depth (int): Maximum depth of the tree.
         min_samples_split (int): Minimum number of samples required to split a node.
@@ -59,29 +64,14 @@ class DecisionTreeBase(BaseModel):
 
     @abstractmethod 
     def _compute_impurity(self, values_left, values_right, samples_left, samples_right):
-        """
-            Compute the impurity for a proposed split.
-     
-            Returns:
-                tuple: (impurity_left, impurity_right)
-        """
         pass
 
     @abstractmethod
     def _best_split(self, X, y):
-        """
-        Find the best feature and threshold to split the data.
-
-        Returns:
-            dict: Best split details.
-        """
         pass
     
     @abstractmethod
     def _build_tree(self, X, y, node, depth=0):
-        """
-        Recursively build the decision tree.
-        """
         pass
 
 
@@ -89,9 +79,16 @@ class DecisionTreeBase(BaseModel):
 
 class DecisionTreeClassifier(DecisionTreeBase):
     """
-    A decision tree classifier.
+    Decision tree classifier using the CART algorithm.
 
-    Inherits from DecisionTreeBase and implements a basic CART algorithm decision tree.
+    Builds a binary decision tree for classification tasks based on
+    Gini impurity and recursively splits nodes to minimize impurity.
+
+    Inherits from DecisionTreeBase.
+
+    Attributes:
+        __labels (ndarray): Unique class labels in the training data.
+        __root (TreeNode): Root node of the constructed decision tree.
     """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -100,20 +97,26 @@ class DecisionTreeClassifier(DecisionTreeBase):
 
     def _majority_label(self, y):
         """
-        Determine the majority class in an array of labels.
+        Determine the majority class label in the given array.
 
-        Args:
+        Parameters:
             y (ndarray): Array of class labels.
 
         Returns:
-            Majority class label.
+            The most frequent label.
         """
         values, counts = np.unique(y, return_counts=True)
         return values[np.argmax(counts)]
 
     def _compute_impurity(self, values_left, values_right, samples_left, samples_right):
         """
-        Compute Gini impurity for left and right splits.
+        Compute the Gini impurity for the left and right child nodes.
+
+        Parameters:
+            values_left (ndarray): Class distribution in the left split.
+            values_right (ndarray): Class distribution in the right split.
+            samples_left (int): Number of samples in the left split.
+            samples_right (int): Number of samples in the right split.
 
         Returns:
             tuple: (left_impurity, right_impurity)
@@ -128,6 +131,25 @@ class DecisionTreeClassifier(DecisionTreeBase):
 
 
     def _best_split(self, X, y):
+        """
+        Identify the best feature and threshold to split the data to reduce impurity.
+
+        Parameters:
+            X (ndarray): Feature matrix.
+            y (ndarray): Target vector.
+
+        Returns:
+            dict: Dictionary containing the best split's details, including:
+                - X_left, X_right: Subsets of X.
+                - y_left, y_right: Subsets of y.
+                - threshold: Chosen threshold value.
+                - feature_idx: Index of the best feature.
+                - samples_left, samples_right: Sample counts.
+                - values_left, values_right: Class distributions.
+                - impurity_left, impurity_right: Gini impurities.
+                - class_left, class_right: Majority class in each split.
+                - cost: Weighted impurity of the split.
+        """
         _, n = X.shape
         best_X_left = best_y_left = None
         best_X_right = best_y_right = None
@@ -197,6 +219,18 @@ class DecisionTreeClassifier(DecisionTreeBase):
 
 
     def _build_tree(self, X, y, node, depth=0):
+        """
+        Recursively grow the decision tree by choosing the best splits.
+
+        Parameters:
+            X (ndarray): Feature matrix at current node.
+            y (ndarray): Label vector at current node.
+            node (TreeNode): Current node in the tree.
+            depth (int): Current depth of the node.
+
+        Returns:
+            TreeNode: The constructed subtree.
+        """
 
         if (self._max_depth != None and depth >= self._max_depth
            or len(y) < self._min_samples_split
@@ -233,6 +267,13 @@ class DecisionTreeClassifier(DecisionTreeBase):
         
     
     def fit(self, X, y):
+        """
+        Fit the decision tree classifier on training data.
+
+        Parameters:
+            X (ndarray): Training feature matrix.
+            y (ndarray): Training label vector.
+        """
         X, y = self._validate_transform_input(X, y)
         self.__labels = np.unique(y)
 
@@ -249,11 +290,11 @@ class DecisionTreeClassifier(DecisionTreeBase):
 
     def _traverse(self, x, node):
         """
-        Traverse the tree to predict the label for a single sample.
+        Traverse the tree recursively to predict the label for a single sample.
 
-        Args:
+        Parameters:
             x (ndarray): Input sample.
-            node (TreeNode): Current node in the tree.
+            node (TreeNode): Current node to evaluate.
 
         Returns:
             Predicted label.
@@ -266,6 +307,17 @@ class DecisionTreeClassifier(DecisionTreeBase):
             return self._traverse(x, node._right_node)
         
     def predict(self, X):
+        """
+        Predict class labels for the input samples.
+
+        Parameters:
+            X (ndarray): Input feature matrix.
+
+        Returns:
+            ndarray: Predicted class labels.
+        """
+        if not self.__root:
+            raise ValueError("Model has not been fitted yet. Call 'fit' before 'predict'.")
         X, _ = self._validate_transform_input(X)
         return np.array([self._traverse(x, self.__root) for x in X])
 
