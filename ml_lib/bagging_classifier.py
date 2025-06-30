@@ -2,7 +2,7 @@ import numpy as np
 from .base_model import BaseModel
 from scipy.stats import mode
 from .decision_tree import DecisionTreeClassifier
-import copy
+from copy import deepcopy
 
 class BaggingClassifier(BaseModel):
     """
@@ -66,7 +66,7 @@ class BaggingClassifier(BaseModel):
             X_subset = X[np.ix_(subset_idx, features_idx)]
             y_subset = y[subset_idx]
 
-            estimator = copy.deepcopy(self.__estimator)
+            estimator = deepcopy(self.__estimator)
             estimator.fit(X_subset, y_subset)
             self.__trained_estimators.append((estimator, features_idx))
 
@@ -103,6 +103,8 @@ class BaggingClassifier(BaseModel):
         Returns:
             np.ndarray: Predicted class labels.
         """
+        if not self.__trained_estimators:
+            raise ValueError("Model has not been fitted yet. Call 'fit' before 'predict'.")
         X, _ = self._validate_transform_input(X)
 
         predictions = []
