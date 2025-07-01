@@ -5,6 +5,7 @@ from .bagging_classifier import BaggingClassifier
 from .adaptive_boost import AdaBoostClassifier
 from .linear_regression import LinearRegression
 from .linear_regression import RidgeRegression
+from .linear_regression import LassoRegression
 
 __all__ = [
     "LinearSVC", 
@@ -13,5 +14,6 @@ __all__ = [
     "BaggingClassifier", 
     "AdaBoostClassifier",
     "LinearRegression",
-    "RidgeRegression"
+    "RidgeRegression",
+    "LassoRegression"
 ]

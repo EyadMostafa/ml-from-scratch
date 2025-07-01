@@ -30,8 +30,7 @@ class LinearRegression(BaseModel):
             error = y_pred - y
             dw = (2 / n_samples) * (X.T @ error)
             return [dw]
-  
-
+        
     def _compute_weights(self, X, y):
         if self._fit_intercept:
             init_params = [self._w, self._b]
@@ -55,8 +54,6 @@ class LinearRegression(BaseModel):
             self._w = updated_params[0]
             self._b = 0.0
 
-
-
     def _compute_normal(self, X, y):
         if self._fit_intercept:
             X = np.c_[np.ones((X.shape[0], 1)), X]
@@ -73,7 +70,9 @@ class LinearRegression(BaseModel):
 
     def fit(self, X, y):
         X, y = self._validate_transform_input(X, y)
-        if self._method == "normal":
+        if self._method == "normal" and self.__class__.__name__ == "LassoRegression":
+            raise ValueError("LassoRegression does not support a closed-form solution.")
+        elif self._method == "normal":
             self._compute_normal(X, y)
         elif self._method == "gradient":
             self._w = np.zeros(X.shape[1])
@@ -85,7 +84,6 @@ class LinearRegression(BaseModel):
             raise ValueError("Model has not been fitted yet. Call 'fit' before 'predict'.")
         X, _ = self._validate_transform_input(X)
         return X @ self._w + self._b
-    
 
 
 class RidgeRegression(LinearRegression):
@@ -109,7 +107,6 @@ class RidgeRegression(LinearRegression):
             error = y_pred - y
             dw = (2 / n_samples) * (X.T @ error) + self.__alpha * w
             return [dw]
-        
 
     def _compute_normal(self, X, y):
         if self._fit_intercept:
@@ -125,3 +122,28 @@ class RidgeRegression(LinearRegression):
         else:
             self._b = 0.0
             self._w = params 
+
+
+
+class LassoRegression(LinearRegression):
+    def __init__(self, alpha=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.__alpha = alpha
+        self._method = "gradient"
+
+    def _compute_gradient(self, params, X, y):
+        n_samples = X.shape[0]
+        
+        if self._fit_intercept:
+            w, b = params
+            y_pred = X @ w + b
+            error = y_pred - y
+            dw = (2 / n_samples) * (X.T @ error) + self.__alpha * np.sign(w)
+            db = (2 / n_samples) * np.sum(error)
+            return [dw, db] 
+        else:
+            (w,) = params
+            y_pred = X @ w
+            error = y_pred - y
+            dw = (2 / n_samples) * (X.T @ error) + self.__alpha * np.sign(w)
+            return [dw]
