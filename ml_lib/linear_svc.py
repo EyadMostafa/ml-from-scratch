@@ -1,6 +1,5 @@
 import numpy as np
 from utils.optimizers import gradient_descent
-from utils.helpers import validate_transform_input
 from .base_model import BaseModel
 
 class LinearSVC(BaseModel):

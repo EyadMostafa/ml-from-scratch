@@ -3,11 +3,13 @@ from .kernelized_svc import KernelizedSVC
 from .decision_tree import DecisionTreeClassifier
 from .bagging_classifier import BaggingClassifier
 from .adaptive_boost import AdaBoostClassifier
+from .linear_regression import LinearRegression
 
 __all__ = [
     "LinearSVC", 
     "KernelizedSVC", 
     "DecisionTreeClassifier", 
     "BaggingClassifier", 
-    "AdaBoostClassifier"
+    "AdaBoostClassifier",
+    "LinearRegression"
 ]
