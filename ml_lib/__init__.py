@@ -3,9 +3,7 @@ from .kernelized_svc import KernelizedSVC
 from .decision_tree import DecisionTreeClassifier
 from .bagging_classifier import BaggingClassifier
 from .adaptive_boost import AdaBoostClassifier
-from .linear_regression import LinearRegression
-from .linear_regression import RidgeRegression
-from .linear_regression import LassoRegression
+from .linear_regression import LinearRegression, RidgeRegression, LassoRegression, ElasticNetRegression
 
 __all__ = [
     "LinearSVC", 
@@ -15,5 +13,6 @@ __all__ = [
     "AdaBoostClassifier",
     "LinearRegression",
     "RidgeRegression",
-    "LassoRegression"
+    "LassoRegression",
+    "ElasticNetRegression"
 ]

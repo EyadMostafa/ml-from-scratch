@@ -70,9 +70,7 @@ class LinearRegression(BaseModel):
 
     def fit(self, X, y):
         X, y = self._validate_transform_input(X, y)
-        if self._method == "normal" and self.__class__.__name__ == "LassoRegression":
-            raise ValueError("LassoRegression does not support a closed-form solution.")
-        elif self._method == "normal":
+        if self._method == "normal":
             self._compute_normal(X, y)
         elif self._method == "gradient":
             self._w = np.zeros(X.shape[1])
@@ -129,6 +127,8 @@ class LassoRegression(LinearRegression):
     def __init__(self, alpha=0.1, **kwargs):
         super().__init__(**kwargs)
         self.__alpha = alpha
+        if self._method == "normal":
+            raise ValueError("LassoRegression does not support a closed-form solution.")
         self._method = "gradient"
 
     def _compute_gradient(self, params, X, y):
@@ -146,4 +146,37 @@ class LassoRegression(LinearRegression):
             y_pred = X @ w
             error = y_pred - y
             dw = (2 / n_samples) * (X.T @ error) + self.__alpha * np.sign(w)
+            return [dw]
+        
+
+class ElasticNetRegression(LinearRegression):
+    def __init__(self, alpha=0.1, r=0.5, **kwargs):
+        super().__init__(**kwargs)
+        self.__alpha = alpha
+        self.__r = r
+        if self._method == "normal":
+              raise ValueError("ElasticNetRegression does not support a closed-form solution.")
+        self._method = "gradient"
+
+    def _compute_gradient(self, params, X, y):
+        n_samples = X.shape[0]
+        
+        if self._fit_intercept:
+            w, b = params
+            l1_penalty = self.__r * self.__alpha * np.sign(w)
+            l2_penalty = (1 - self.__r) * self.__alpha * w
+            y_pred = X @ w + b
+            error = y_pred - y
+
+
+            dw = (2 / n_samples) * (X.T @ error) + l1_penalty + l2_penalty
+            db = (2 / n_samples) * np.sum(error)
+            return [dw, db] 
+        else:
+            (w,) = params
+            l1_penalty = self.__r * self.__alpha * np.sign(w)
+            l2_penalty = (1 - self.__r) * self.__alpha * w
+            y_pred = X @ w
+            error = y_pred - y
+            dw = (2 / n_samples) * (X.T @ error) + l1_penalty + l2_penalty
             return [dw]

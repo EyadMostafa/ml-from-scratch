@@ -37,7 +37,7 @@ def gradient_descent(gradient_fn, params, features, labels, learning_rate=0.01, 
         gradients = gradient_fn(params, features, labels)
         if fit_intercept:
             combined_grads = np.concatenate([gradients[0].ravel(), gradients[1].ravel()])
-        else: combined_grads = [gradients[0].ravel()]
+        else: combined_grads = gradients[0].ravel()
         if np.linalg.norm(combined_grads) < tol:
             break
         params = [p - g * learning_rate for p, g in zip(params, gradients)]
