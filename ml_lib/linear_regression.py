@@ -15,26 +15,46 @@ class LinearRegression(BaseModel):
     __gradient_descent = staticmethod(gradient_descent)
 
     def _compute_gradient(self, params, X, y):
-        w, b = params
         n_samples = X.shape[0]
-    
-        y_pred = X @ w + b
-        error = y_pred - y
-    
-        dw = (2 / n_samples) * (X.T @ error)
-        db = (2 / n_samples) * np.sum(error)
-    
-        return np.array([dw, db], dtype=object)
+        
+        if self._fit_intercept:
+            w, b = params
+            y_pred = X @ w + b
+            error = y_pred - y
+            dw = (2 / n_samples) * (X.T @ error)
+            db = (2 / n_samples) * np.sum(error)
+            return [dw, db] 
+        else:
+            (w,) = params
+            y_pred = X @ w
+            error = y_pred - y
+            dw = (2 / n_samples) * (X.T @ error)
+            return [dw]
+  
 
     def _compute_weights(self, X, y):
-        self._w, self._b = self.__gradient_descent(
+        if self._fit_intercept:
+            init_params = [self._w, self._b]
+        else:
+            init_params = [self._w]
+    
+        updated_params = self.__gradient_descent(
             gradient_fn=self._compute_gradient,
-            params=np.array([self._w, self._b], dtype=object),
+            params=init_params,
             features=X, 
             labels=y,
             learning_rate=self._learning_rate,
             max_iter=self._n_iterations,
-            tol=self._tol)
+            tol=self._tol,
+            fit_intercept=self._fit_intercept
+        )
+    
+        if self._fit_intercept:
+            self._w, self._b = updated_params
+        else:
+            self._w = updated_params[0]
+            self._b = 0.0
+
 
 
     def _compute_normal(self, X, y):
@@ -69,4 +89,39 @@ class LinearRegression(BaseModel):
 
 
 class RidgeRegression(LinearRegression):
-    pass
+    def __init__(self, alpha=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.__alpha = alpha
+
+    def _compute_gradient(self, params, X, y):
+        n_samples = X.shape[0]
+        
+        if self._fit_intercept:
+            w, b = params
+            y_pred = X @ w + b
+            error = y_pred - y
+            dw = (2 / n_samples) * (X.T @ error) + self.__alpha * w
+            db = (2 / n_samples) * np.sum(error)
+            return [dw, db] 
+        else:
+            (w,) = params
+            y_pred = X @ w
+            error = y_pred - y
+            dw = (2 / n_samples) * (X.T @ error) + self.__alpha * w
+            return [dw]
+        
+
+    def _compute_normal(self, X, y):
+        if self._fit_intercept:
+            X = np.c_[np.ones((X.shape[0], 1)), X]
+
+        penalty = self.__alpha * np.eye(X.shape[1])
+
+        params = np.linalg.pinv(X.T @ X + penalty) @ X.T @ y
+
+        if self._fit_intercept:
+            self._b = params[0]
+            self._w = params[1:]
+        else:
+            self._b = 0.0
+            self._w = params 

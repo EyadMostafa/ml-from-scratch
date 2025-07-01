@@ -4,6 +4,7 @@ from .decision_tree import DecisionTreeClassifier
 from .bagging_classifier import BaggingClassifier
 from .adaptive_boost import AdaBoostClassifier
 from .linear_regression import LinearRegression
+from .linear_regression import RidgeRegression
 
 __all__ = [
     "LinearSVC", 
@@ -11,5 +12,6 @@ __all__ = [
     "DecisionTreeClassifier", 
     "BaggingClassifier", 
     "AdaBoostClassifier",
-    "LinearRegression"
+    "LinearRegression",
+    "RidgeRegression"
 ]
