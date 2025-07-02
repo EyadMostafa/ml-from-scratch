@@ -3,18 +3,18 @@ from .base_model import BaseModel
 from utils.optimizers import gradient_descent
 
 class LinearRegression(BaseModel):
-    def __init__(self, fit_intercept=True, method='normal', learning_rate=0.01, n_iterations=1000, tol=1e-6):
+    def __init__(self, fit_intercept=True, optimizer='normal', learning_rate=0.01, max_iter=1000, tol=1e-6):
         self._fit_intercept = fit_intercept
-        self._method = method
+        self._optimizer = optimizer
         self._learning_rate = learning_rate
-        self._n_iterations = n_iterations
+        self._max_iter = max_iter
         self._tol = tol
         self._w = None
         self._b = None
 
     __gradient_descent = staticmethod(gradient_descent)
 
-    def _compute_gradient(self, params, X, y):
+    def _mse_gradient(self, params, X, y):
         n_samples = X.shape[0]
         
         if self._fit_intercept:
@@ -38,12 +38,12 @@ class LinearRegression(BaseModel):
             init_params = [self._w]
     
         updated_params = self.__gradient_descent(
-            gradient_fn=self._compute_gradient,
+            gradient_fn=self._mse_gradient,
             params=init_params,
             features=X, 
             labels=y,
             learning_rate=self._learning_rate,
-            max_iter=self._n_iterations,
+            max_iter=self._max_iter,
             tol=self._tol,
             fit_intercept=self._fit_intercept
         )
@@ -70,15 +70,15 @@ class LinearRegression(BaseModel):
 
     def fit(self, X, y):
         X, y = self._validate_transform_input(X, y)
-        if self._method == "normal":
+        if self._optimizer == "normal":
             self._compute_normal(X, y)
-        elif self._method == "gradient":
+        elif self._optimizer == "gd":
             self._w = np.zeros(X.shape[1])
             self._b = 0.0
             self._compute_weights(X, y)
 
     def predict(self, X):
-        if self._w is None or self._b is None:
+        if self._w is None:
             raise ValueError("Model has not been fitted yet. Call 'fit' before 'predict'.")
         X, _ = self._validate_transform_input(X)
         return X @ self._w + self._b
@@ -89,7 +89,7 @@ class RidgeRegression(LinearRegression):
         super().__init__(**kwargs)
         self.__alpha = alpha
 
-    def _compute_gradient(self, params, X, y):
+    def _mse_gradient(self, params, X, y):
         n_samples = X.shape[0]
         
         if self._fit_intercept:
@@ -127,11 +127,10 @@ class LassoRegression(LinearRegression):
     def __init__(self, alpha=0.1, **kwargs):
         super().__init__(**kwargs)
         self.__alpha = alpha
-        if self._method == "normal":
+        if self._optimizer == "normal":
             raise ValueError("LassoRegression does not support a closed-form solution.")
-        self._method = "gradient"
 
-    def _compute_gradient(self, params, X, y):
+    def _mse_gradient(self, params, X, y):
         n_samples = X.shape[0]
         
         if self._fit_intercept:
@@ -154,11 +153,10 @@ class ElasticNetRegression(LinearRegression):
         super().__init__(**kwargs)
         self.__alpha = alpha
         self.__r = r
-        if self._method == "normal":
+        if self._optimizer == "normal":
               raise ValueError("ElasticNetRegression does not support a closed-form solution.")
-        self._method = "gradient"
 
-    def _compute_gradient(self, params, X, y):
+    def _mse_gradient(self, params, X, y):
         n_samples = X.shape[0]
         
         if self._fit_intercept:

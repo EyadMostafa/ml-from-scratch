@@ -4,6 +4,7 @@ from .decision_tree import DecisionTreeClassifier
 from .bagging_classifier import BaggingClassifier
 from .adaptive_boost import AdaBoostClassifier
 from .linear_regression import LinearRegression, RidgeRegression, LassoRegression, ElasticNetRegression
+from .logistic_regression import LogisticRegression
 
 __all__ = [
     "LinearSVC", 
@@ -14,5 +15,6 @@ __all__ = [
     "LinearRegression",
     "RidgeRegression",
     "LassoRegression",
-    "ElasticNetRegression"
+    "ElasticNetRegression",
+    "LogisticRegression"
 ]
