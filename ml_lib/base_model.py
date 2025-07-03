@@ -6,7 +6,8 @@ class BaseModel(ABC):
         pass
 
     _validate_transform_input = staticmethod(validate_transform_input)
-        
+
+    @property   
     def get_params(self):
         """
         Get parameters of the model.

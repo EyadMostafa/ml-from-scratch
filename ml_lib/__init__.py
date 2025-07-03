@@ -5,6 +5,7 @@ from .bagging_classifier import BaggingClassifier
 from .adaptive_boost import AdaBoostClassifier
 from .linear_regression import LinearRegression, RidgeRegression, LassoRegression, ElasticNetRegression
 from .logistic_regression import LogisticRegression
+from utils.preprocessors import PCA
 
 __all__ = [
     "LinearSVC", 
