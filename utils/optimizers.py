@@ -9,12 +9,10 @@ def gradient_descent(gradient_fn, params, features, labels, learning_rate=0.01, 
         dw = gradients[0]
         db = gradients[1] if fit_intercept else 0.0
 
-        # Update parameters
         w -= learning_rate * dw
         if fit_intercept:
             b -= learning_rate * db
 
-        # Check convergence
         grad_norm = np.linalg.norm(np.concatenate([dw.ravel(), np.array([db])]) if fit_intercept else dw.ravel())
         if grad_norm < tol:
             break

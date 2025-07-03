@@ -124,11 +124,9 @@ class RidgeRegression(LinearRegression):
 
 
 class LassoRegression(LinearRegression):
-    def __init__(self, alpha=0.1, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, alpha=0.1, fit_intercept=True, learning_rate=0.01, max_iter=1000, tol=1e-6):
+        super().__init__(fit_intercept=True, learning_rate=0.01, max_iter=1000, tol=1e-6)
         self.__alpha = alpha
-        if self._optimizer == "normal":
-            raise ValueError("LassoRegression does not support a closed-form solution.")
 
     def _mse_gradient(self, params, X, y):
         n_samples = X.shape[0]
@@ -149,12 +147,10 @@ class LassoRegression(LinearRegression):
         
 
 class ElasticNetRegression(LinearRegression):
-    def __init__(self, alpha=0.1, r=0.5, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, alpha=0.1, r=0.5, fit_intercept=True, learning_rate=0.01, max_iter=1000, tol=1e-6):
+        super().__init__(fit_intercept=True, learning_rate=0.01, max_iter=1000, tol=1e-6)
         self.__alpha = alpha
         self.__r = r
-        if self._optimizer == "normal":
-              raise ValueError("ElasticNetRegression does not support a closed-form solution.")
 
     def _mse_gradient(self, params, X, y):
         n_samples = X.shape[0]

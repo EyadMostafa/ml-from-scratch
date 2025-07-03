@@ -3,6 +3,7 @@ from .base_model import BaseModel
 from utils.optimizers import gradient_descent
 
 ## support quasi-newton lbfgs optimizer 
+## add softmax regression
 
 class LogisticRegression(BaseModel):
     def __init__(self, fit_intercept=True, 
