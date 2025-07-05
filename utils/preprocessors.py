@@ -3,17 +3,17 @@ from .helpers import validate_transform_input
 
 class PCA:
     def __init__(self, n_components=None):
-        self._n_components = n_components
-        self._mean = None
-        self._eigenvalues = None
-        self._components = None
+        self.__n_components = n_components
+        self.__mean = None
+        self.__eigenvalues = None
+        self.__components = None
 
     _validate_tranform_input = staticmethod(validate_transform_input)
 
-    def _compute_covariance_matrix(self, X):
+    def __compute_covariance_matrix(self, X):
         return (X.T @ X) / (X.shape[0] - 1)
     
-    def _compute_eigens(self, cov_max):
+    def __compute_eigens(self, cov_max):
         eigenvalues, eigenvectors = np.linalg.eig(cov_max)
         sorted_indices = np.argsort(eigenvalues)[::-1]
         eigenvalues = eigenvalues[sorted_indices]
@@ -23,19 +23,19 @@ class PCA:
     
     def fit(self, X):
         X, _ = self._validate_tranform_input(X)
-        self._mean = X.mean(axis=0)
-        X = X - self._mean
-        cov_matrix = self._compute_covariance_matrix(X)
-        eigenvalues, components = self._compute_eigens(cov_matrix)
-        self._eigenvalues = eigenvalues[:self._n_components]
-        self._components = components[:, :self._n_components]
+        self.__mean = X.mean(axis=0)
+        X = X - self.__mean
+        cov_matrix = self.__compute_covariance_matrix(X)
+        eigenvalues, components = self.__compute_eigens(cov_matrix)
+        self.__eigenvalues = eigenvalues[:self.__n_components]
+        self.__components = components[:, :self.__n_components]
 
     def transform(self, X):
-        if self._components is None or self._eigenvalues is None:
+        if self.__components is None or self.__eigenvalues is None:
             raise ValueError("PCA has not been fitted yet. Call 'fit' before 'tranform'.")
         X, _ = self._validate_tranform_input(X)
-        X = X - self._mean
-        return X @ self._components
+        X = X - self.__mean
+        return X @ self.__components
     
     def fit_transform(self, X):
         self.fit(X)
