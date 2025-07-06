@@ -6,6 +6,7 @@ from .adaptive_boost import AdaBoostClassifier
 from .linear_regression import LinearRegression, RidgeRegression, LassoRegression, ElasticNetRegression
 from .logistic_regression import LogisticRegression
 from .kmeans import KMeans
+from .dbscan import DBSCAN
 from utils.preprocessors import PCA
 
 
@@ -20,5 +21,6 @@ __all__ = [
     "LassoRegression",
     "ElasticNetRegression",
     "LogisticRegression",
-    "KMeans"
+    "KMeans",
+    "DBSCAN"
 ]
