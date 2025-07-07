@@ -7,6 +7,7 @@ from .linear_regression import LinearRegression, RidgeRegression, LassoRegressio
 from .logistic_regression import LogisticRegression
 from .kmeans import KMeans
 from .dbscan import DBSCAN
+from .gaussian_mixture import GaussianMixture
 from utils.preprocessors import PCA
 
 
@@ -22,5 +23,6 @@ __all__ = [
     "ElasticNetRegression",
     "LogisticRegression",
     "KMeans",
-    "DBSCAN"
+    "DBSCAN",
+    "GaussianMixture"
 ]

@@ -72,6 +72,8 @@ class KMeans(BaseModel):
         self.__inertia = self.__compute_inertia(X, self.__centroids, self.__labels)
         self.__compute_centroids(X)
 
+        return self
+
     def transform(self, X):
         distances = np.zeros((X.shape[0], self.__n_clusters))
         for i in range(self.__n_clusters):
