@@ -42,7 +42,7 @@ class GaussianMixture:
         for k in range(K):
             joint_probs[:, k] = self.__compute_joint_probability(X, weights[k], means[k], covariances[k])
 
-        return np.sum(np.log(np.sum(joint_probs, axis=1) + 1e-10))
+        return np.log(np.sum(joint_probs, axis=1) + 1e-10)
 
     def __compute_joint_probability(self, X, weight, mean, covariance):
         dist = multivariate_normal(mean=mean, cov=covariance)
@@ -88,7 +88,7 @@ class GaussianMixture:
                 weighted_outer = gamma_k[:, np.newaxis, np.newaxis] * np.einsum("ni,nj->nij", diff, diff)
                 new_covariances[k] = np.sum(weighted_outer, axis=0) / N_k
 
-            new_log_likelihood = self.__compute_log_likelihood(X, new_weights, new_means, new_covariances)
+            new_log_likelihood = np.sum(self.__compute_log_likelihood(X, new_weights, new_means, new_covariances))
 
             if self._log_likelihood is None:
                 self._log_likelihood = new_log_likelihood
@@ -102,6 +102,25 @@ class GaussianMixture:
                 self._posterior_probs = posterior_probs
                 self._log_likelihood = new_log_likelihood
             else: break
+
+    def sample(self, n_samples):
+        X_samples = []
+        y_samples = []
+        for _ in range(n_samples):
+            component_idx = np.random.choice(self._n_components, p=self._weights)
+            mean = self._means[component_idx]
+            L = np.linalg.cholesky(self._covariances[component_idx])
+            z = np.random.randn(mean.shape[0])
+
+            x = mean + L @ z
+            X_samples.append(x)
+            y_samples.append(component_idx)
+
+        return np.array(X_samples), np.array(y_samples)
+    
+    def score_samples(self, X):
+        X, _ = self._validate_transform_input(X)
+        return self.__compute_log_likelihood(X, self._weights, self._means, self._covariances)
 
     def fit(self, X):
         X, _ = self._validate_transform_input(X)
