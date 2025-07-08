@@ -23,15 +23,13 @@ class LinearSVC(BaseModel):
         fit(X, y): Train the model using hinge loss on binary-labeled data.
         predict(X): Predict class labels for input samples.
     """
-    def __init__(self, C=1.0, learning_rate=0.01, max_iter=1000, tol=1e-4) -> None:
-        self.__C = C
-        self.__learning_rate = learning_rate
-        self.__max_iter = max_iter
-        self.__tol = tol
-        self.__w = None
-        self.__b = None
-
-    __gradient_descent = staticmethod(gradient_descent)
+    def __init__(self, C=1.0, learning_rate=1e-6, max_iter=1000, tol=1e-4) -> None:
+        self._C = C
+        self._learning_rate = learning_rate
+        self._max_iter = max_iter
+        self._tol = tol
+        self._w = None
+        self._b = None
 
     def _hinge_loss_gradient(self, params, X, y):
         """
@@ -50,8 +48,8 @@ class LinearSVC(BaseModel):
         margin = X @ w + b
         mask = margin <= 1
 
-        dw = w - self.__C * y[mask] @ X[mask]
-        db = -self.__C * np.sum(y[mask])
+        dw = w - self._C * y[mask] @ X[mask]
+        db = -self._C * np.sum(y[mask])
 
         return np.array([dw, db], dtype=object)
 
@@ -64,23 +62,25 @@ class LinearSVC(BaseModel):
             y (ndarray): Binary target labels (0 or 1).
         """
         if len(np.unique(y)) != 2:
-            raise ValueError("Kernelized SVC only supports binary classification.")
+            raise ValueError("Linear SVC only supports binary classification.")
         X, y = self._validate_transform_input(X, y)
         y = np.where(y <= 0, -1, 1) 
         n = X.shape[1]
 
-        self.__w = np.zeros(n)
-        self.__b = 0.0
+        self._w = np.zeros(n)
+        self._b = 0.0
 
-        self.__w, self.__b = self.__gradient_descent(
+        self._w, self._b = gradient_descent(
             gradient_fn=self._hinge_loss_gradient,
-            params=np.array([self.__w, self.__b], dtype=object),
-            learning_rate=self.__learning_rate,
-            max_iter=self.__max_iter,
-            tol=self.__tol,
+            params=np.array([self._w, self._b], dtype=object),
+            learning_rate=self._learning_rate,
+            max_iter=self._max_iter,
+            tol=self._tol,
             features=X,
             labels=y
         )
+
+        return self
         
     def predict(self, X):
         """
@@ -93,7 +93,7 @@ class LinearSVC(BaseModel):
             preds (ndarray): Predicted class labels (0 or 1).
         """
         X, _ = self._validate_transform_input(X)
-        if self.__w is None or self.__b is None:
+        if self._w is None or self._b is None:
             raise ValueError("Model has not been fitted yet. Call 'fit' before 'predict'.")
-        predictions = X @ self.__w + self.__b
+        predictions = X @ self._w + self._b
         return np.where(predictions >= 0, 1, 0)
