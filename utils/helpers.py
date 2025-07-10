@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import seaborn as sns
 import time
 from sklearn.model_selection import cross_val_score
@@ -10,7 +11,10 @@ from sklearn.metrics import (make_scorer,
                              recall_score, 
                              f1_score, 
                              roc_auc_score,
-                             confusion_matrix)
+                             confusion_matrix,
+                             silhouette_score,
+                             silhouette_samples,
+                             adjusted_rand_score)
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.preprocessing import StandardScaler
 
@@ -69,14 +73,21 @@ def validate_transform_input(X, y = None):
     return X, y
 
 
-def evaluate_metrics(y_true, y_pred, title="Model Evaluation", average="binary"):
-    results = pd.DataFrame([{
-        "Model": title,
-        "Accuracy": accuracy_score(y_true, y_pred),
-        "Precision": precision_score(y_true, y_pred),
-        "Recall": recall_score(y_true, y_pred),
-        "F1": f1_score(y_true, y_pred)
-    }])
+def evaluate_metrics(y_true, y_pred, X=None, title="Model Evaluation", average="binary", supervised=True):
+    if supervised:
+        results = pd.DataFrame([{
+            "Model": title,
+            "Accuracy": accuracy_score(y_true, y_pred),
+            "Precision": precision_score(y_true, y_pred),
+            "Recall": recall_score(y_true, y_pred),
+            "F1": f1_score(y_true, y_pred)
+        }])
+    else:
+        results = pd.DataFrame([{
+            "Model": title,
+            "Silouhette": silhouette_score(X, y_pred),
+            "Adjusted-Rand": adjusted_rand_score(y_true, y_pred),
+        }])  
 
     return results
 
@@ -103,37 +114,17 @@ def plot_confusion_matrix(y_true, y_pred, ax, labels=None, normalize=False,
     ax.set_ylabel("Actual")
 
 
-def train_time(clf, X, y, title="Model", verbose=True):
+def train_time(clf, X, y=None, title="Model", verbose=True, supervised=True):
     start = time.time()
-    clf.fit(X, y)
+    if supervised:
+        clf.fit(X, y)
+    else: clf.fit(X)
     duration = time.time() - start
 
     if verbose:
         print(f"{title} trained in {duration:.4f} seconds.")
 
     return np.round(duration, 4)
-
-
-
-def cross_validate_model(clf, X, y, cv=5, scoring_metrics=None, title="Model CrossValidation Evaluation", verbose=True):
-
-    scoring_metrics = scoring_metrics if scoring_metrics else ['accuracy', 'precision', 'recall', 'f1']
-    scorers = {
-        'accuracy': make_scorer(accuracy_score),
-        'precision': make_scorer(precision_score),
-        'recall': make_scorer(recall_score),
-        'f1': make_scorer(f1_score),
-    }
-
-    scores_dict = {}
-
-    for metric in scoring_metrics:
-        if metric not in scorers:
-            raise ValueError(f"Unsupported metric: {metric}") 
-        scores = cross_val_score(clf, X, y, cv=cv, scoring=scorers[metric])
-        scores_dict[metric] = np.mean(scores)
-
-    return pd.DataFrame([scores_dict]) 
 
         
 def plot_decision_boundary(clf, X, y, ax, title="Decision Boundary", cmap=plt.cm.coolwarm, colors=['blue', 'red'], xvisible=True, yvisible=True, s=30):
@@ -243,3 +234,79 @@ def cross_validate(model_class, X, y, cv=5, scoring_metrics=None, seed=42, verbo
     # Compute average scores
     avg_scores = {metric: np.mean(fold_scores[metric]) for metric in scoring_metrics}
     return pd.DataFrame([avg_scores])
+
+
+
+def plot_silhouette_chart(X, y, ax, n_clusters, title="Model Silhouette Chart"):
+
+    silhouette = silhouette_score(X, y)
+    instance_silhouette_score = silhouette_samples(X, y)
+
+    silhouette_avgs = {}
+    for i in range(n_clusters):
+        silhouette_avgs[i] = np.mean(instance_silhouette_score[y == i])
+
+    silhouette_avgs = sorted(silhouette_avgs.items(), 
+                             key=lambda item: item[1],
+                             reverse=True)
+
+    y_lower = 10
+
+    for i, _ in silhouette_avgs:
+
+        cluster_silhouette = instance_silhouette_score[y == i]
+        cluster_silhouette.sort()
+
+        size = cluster_silhouette.shape[0]
+        y_upper = y_lower + size
+
+        color = cm.nipy_spectral(float(i) / n_clusters)
+
+        ax.fill_betweenx(np.arange(y_lower, y_upper),
+                         0, cluster_silhouette,
+                         facecolor=color,
+                         edgecolor=color,
+                         alpha=0.7)
+        
+        ax.text(-0.05, y_lower + 0.5 * size, str(i))
+
+        y_lower = y_upper + 10
+
+    ax.axvline(x=silhouette, color='red', linestyle='--')
+    ax.set_title(title)
+    ax.set_xlabel("Silhouette coefficient values")
+    ax.set_ylabel("Cluster label")
+    ax.set_yticks([])
+    ax.set_xlim([-0.1, 1])
+
+
+def visualize_clustering(X, y, centroids=None, ax=None, title="Model Clusters", xvisible=True, yvisible=True):
+
+    if ax is None:
+        fig, ax = plt.subplots()
+
+    unique_labels = np.unique(y)
+    
+    colors = [cm.nipy_spectral(i / len(unique_labels)) for i in range(len(unique_labels))]
+
+    for i, label in enumerate(unique_labels):
+        cluster_mask = (y == label)
+        
+        ax.scatter(*X[cluster_mask].T,
+                   color=colors[i],
+                   label=f"Cluster {label}",
+                   alpha=0.8)
+        
+    if centroids is not None and len(centroids) > 0:
+            ax.scatter(*centroids.T, 
+                       c="red",
+                       marker="x")
+        
+    ax.set_title(title)
+    ax.set_xlabel("Feature 1")
+    ax.set_ylabel("Feature 2")
+    ax.legend(title="Clusters")
+    if not xvisible:
+        ax.get_xaxis().set_visible(False)
+    if not yvisible:
+        ax.get_yaxis().set_visible(False)
