@@ -136,7 +136,7 @@ def cross_validate_model(clf, X, y, cv=5, scoring_metrics=None, title="Model Cro
     return pd.DataFrame([scores_dict]) 
 
         
-def plot_decision_boundary(clf, X, y, ax, title="Decision Boundary", cmap=plt.cm.coolwarm, colors=['blue', 'red'], xvisible=True, yvisible=True):
+def plot_decision_boundary(clf, X, y, ax, title="Decision Boundary", cmap=plt.cm.coolwarm, colors=['blue', 'red'], xvisible=True, yvisible=True, s=30):
     x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
     y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
     xx, yy = np.meshgrid(np.linspace(x_min, x_max, 300),
@@ -148,7 +148,7 @@ def plot_decision_boundary(clf, X, y, ax, title="Decision Boundary", cmap=plt.cm
     ax.contourf(xx, yy, Z, alpha=0.8, cmap=cmap)    
 
     for idx, val in enumerate(np.unique(y)):
-        ax.scatter(X[y == val, 0], X[y == val, 1], c=colors[idx], label=f'Class {val}', edgecolor='k')
+        ax.scatter(X[y == val, 0], X[y == val, 1], c=colors[idx], label=f'Class {val}', edgecolor='k', s=s)
     
     if not xvisible:
         ax.get_xaxis().set_visible(False)

@@ -18,12 +18,13 @@ class KernelizedSVC(BaseModel):
         coef0 (float): Independent term in polynomial kernel (only used if kernel='poly').
 
     Attributes:
-        __X (ndarray): Training features.
-        __y (ndarray): Binary training labels (converted to -1 and 1).
-        __alphas (ndarray): Lagrange multipliers.
-        __b (float): Bias term.
-        __support_idx (ndarray): Indices of support vectors.
-        __kernel_matrix (ndarray): Precomputed Gram matrix.
+        _X (ndarray): Training features.
+        _y (ndarray): Binary training labels (converted to -1 and 1).
+        _alphas (ndarray): Lagrange multipliers.
+        _b (float): Bias term.
+        _support_indices_vis = (ndarray): Indices used for visualization since they match sklearn's indices.
+        __support_indices (ndarray): Indices of used for actual computation since the lead to more accurate results.
+        _kernel_matrix (ndarray): Precomputed Gram matrix.
 
     Methods:
         fit(X, y): Train the SVM on input data.
@@ -32,17 +33,18 @@ class KernelizedSVC(BaseModel):
         set_params(**params): Update model hyperparameters.
     """
     def __init__(self, kernel='rbf', C=1.0, gamma='scale', degree=3, coef0=0.0):
-        self.__X = None
-        self.__y = None
-        self.__kernel = kernel
-        self.__C = C
-        self.__gamma = gamma
-        self.__degree = degree
-        self.__coef0 = coef0
-        self.__kernel_matrix = None
-        self.__alphas = None
-        self.__b = None
-        self.__support_idx = None
+        self._X = None
+        self._y = None
+        self._kernel = kernel
+        self._C = C
+        self._gamma = gamma
+        self._degree = degree
+        self._coef0 = coef0
+        self._kernel_matrix = None
+        self._alphas = None
+        self._b = None
+        self._support_indices_vis = None
+        self.__support_indices = None
 
     def __compute_kernel_matrix(self, X1, X2):
         """
@@ -55,16 +57,16 @@ class KernelizedSVC(BaseModel):
         Returns:
             K (ndarray): Kernel matrix of shape (n_samples_1, n_samples_2).
         """
-        if self.__kernel == 'linear':
+        if self._kernel == 'linear':
             return X1 @ X2.T     
            
-        elif self.__kernel == 'poly':
-            return (self.__gamma * (X1 @ X2.T) + self.__coef0) ** self.__degree
+        elif self._kernel == 'poly':
+            return (self._gamma * (X1 @ X2.T) + self._coef0) ** self._degree
         
-        elif self.__kernel == 'rbf':
+        elif self._kernel == 'rbf':
             sq_dists = np.sum(X1**2, axis=1).reshape(-1, 1) + np.sum(X2**2, axis=1) - 2 * (X1 @ X2.T)
             sq_dists = np.maximum(sq_dists, 0)
-            return np.exp(-self.__gamma * sq_dists)
+            return np.exp(-self._gamma * sq_dists)
 
         else:
             raise ValueError("Unsupported kernel type. Use 'linear', 'poly', 'rbf'.")
@@ -84,13 +86,13 @@ class KernelizedSVC(BaseModel):
         alphas : ndarray of shape (n_samples,)
             Lagrange multipliers for the support vectors.
         """
-        m = self.__X.shape[0]
-        self.__kernel_matrix = K = self.__compute_kernel_matrix(self.__X, self.__X)
-        H = np.outer(self.__y, self.__y) * K
+        m = self._X.shape[0]
+        self._kernel_matrix = K = self.__compute_kernel_matrix(self._X, self._X)
+        H = np.outer(self._y, self._y) * K
         f = -np.ones(m)
         A = np.vstack([np.eye(m), -np.eye(m)])
-        b = np.hstack([self.__C * np.ones(m), np.zeros(m)])
-        A_eq = self.__y.reshape(1, -1)
+        b = np.hstack([self._C * np.ones(m), np.zeros(m)])
+        A_eq = self._y.reshape(1, -1)
         b_eq = np.array([0.0])
 
         H = matrix(H)
@@ -113,22 +115,23 @@ class KernelizedSVC(BaseModel):
             X (ndarray): Training feature matrix.
             y (ndarray): Training labels (binary).
         """
-        self.__X, self.__y = self._validate_transform_input(X, y)
+        self._X, self._y = self._validate_transform_input(X, y)
         if len(np.unique(y)) != 2:
             raise ValueError("Kernelized SVC only supports binary classification.")
         
-        if self.__gamma == 'scale':
-            self.__gamma = 1.0 / (self.__X.shape[1] * self.__X.var())
+        if self._gamma == 'scale':
+            self._gamma = 1.0 / (self._X.shape[1] * self._X.var())
 
-        self.__y = np.where(self.__y <= 0, -1, 1)
-        self.__alphas = self.__compute_alpha()
-        self.__support_idx = np.where((self.__alphas > 1e-5) & (self.__alphas < self.__C - 1e-5))[0]
+        self._y = np.where(self._y <= 0, -1, 1)
+        self._alphas = self.__compute_alpha()
+        self.__support_indices = np.where((self._alphas > 1e-5) & (self._alphas < self._C - 1e-5))[0]
+        self._support_indices_vis = np.where(self._alphas > 1e-6)[0]
         
         b_vals = []
-        for i in self.__support_idx:
-            b_i = self.__y[i] - np.sum(self.__alphas * self.__y * self.__kernel_matrix[i])
+        for i in self.__support_indices:
+            b_i = self._y[i] - np.sum(self._alphas * self._y * self._kernel_matrix[i])
             b_vals.append(b_i)
-        self.__b = np.mean(b_vals)
+        self._b = np.mean(b_vals)
 
 
     def predict(self, X):
@@ -142,8 +145,8 @@ class KernelizedSVC(BaseModel):
             preds (ndarray): Predicted class labels (0 or 1).
         """
         X, _ = self._validate_transform_input(X)
-        if self.__alphas is None or self.__b is None:
+        if self._alphas is None or self._b is None:
             raise ValueError("Model has not been fitted yet. Call 'fit' before 'predict'.")
-        kernel_matrix_test = self.__compute_kernel_matrix(self.__X, X)
-        predictions = kernel_matrix_test.T @ (self.__alphas * self.__y) + self.__b
+        kernel_matrix = self.__compute_kernel_matrix(self._X, X)
+        predictions = kernel_matrix.T @ (self._alphas * self._y) + self._b
         return np.where(predictions >= 0, 1, 0)

@@ -18,6 +18,7 @@ class LinearSVC(BaseModel):
     Attributes:
         _w (ndarray): Learned weight vector.
         _b (float): Learned bias term.
+        _support_vectors (ndarray): Samples that lie within the margin or are misclassified.
 
     Methods:
         fit(X, y): Train the model using hinge loss on binary-labeled data.
@@ -30,6 +31,7 @@ class LinearSVC(BaseModel):
         self._tol = tol
         self._w = None
         self._b = None
+        self._support_indices = None
 
     def _hinge_loss_gradient(self, params, X, y):
         """
@@ -45,8 +47,10 @@ class LinearSVC(BaseModel):
         """
         w, b = params
 
-        margin = X @ w + b
-        mask = margin <= 1
+        margin = y * (X @ w + b)
+        mask = margin < 1
+
+        self._support_indices = np.where(margin <= 1)[0]
 
         dw = w - self._C * y[mask] @ X[mask]
         db = -self._C * np.sum(y[mask])
@@ -55,7 +59,7 @@ class LinearSVC(BaseModel):
 
     def fit(self, X, y):
         """
-        Train the linear SVM using gradient descent.
+        Train the linear SVM using batch gradient descent.
 
         Parameters:
             X (ndarray): Training feature matrix.
