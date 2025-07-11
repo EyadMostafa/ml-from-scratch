@@ -13,13 +13,13 @@ class KMeans(BaseModel):
         self._labels  = None
         self._centroids_over_iters = []
         self._labels_over_iters = []
-    
+        
     def __compute_squared_euclidean_dist(self, X, centroid):
         return np.sum((X - centroid)**2, axis=1)
-    
+
     def __compute_inertia(self, X, centroids, labels):
         inertia = 0
-        for i in range(self._n_clusters ):
+        for i in range(self._n_clusters):
             inertia += np.sum(self.__compute_squared_euclidean_dist(X[labels == i], centroids[i]))
 
         return inertia
@@ -27,7 +27,7 @@ class KMeans(BaseModel):
     def __compute_initial_centroids(self, X):
         m = X.shape[0]
         centroids = []
-        D = np.full(m, np.inf)
+        D = np.full(m, np.inf)  
         init_centroid_idx = np.random.choice(m)
         init_centroid = X[init_centroid_idx]
         centroids.append(init_centroid)
@@ -70,10 +70,13 @@ class KMeans(BaseModel):
 
     def fit(self, X):
         X, _ = self._validate_transform_input(X)
+
         self._centroids = self.__compute_initial_centroids(X)
         self._centroids_over_iters.append(self._centroids)
+
         self._labels  = self.__compute_labels(X, self._centroids)
         self._labels_over_iters.append(self._labels)
+
         self._inertia = self.__compute_inertia(X, self._centroids, self._labels )
         self.__compute_centroids(X)
 
@@ -100,13 +103,3 @@ class KMeans(BaseModel):
     def fit_predict(self, X):
         self.fit(X)
         return self.predict(X)
-
-
-
-
-
-
-
-
-
-
