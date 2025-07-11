@@ -127,26 +127,39 @@ def train_time(clf, X, y=None, title="Model", verbose=True, supervised=True):
     return np.round(duration, 4)
 
         
-def plot_decision_boundary(clf, X, y, ax, title="Decision Boundary", cmap=plt.cm.coolwarm, colors=['blue', 'red'], xvisible=True, yvisible=True, s=30):
-    x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
-    y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
+def plot_decision_boundary(
+    clf, X, y=None, ax=None, title="Decision Boundary",
+    cmap=plt.cm.coolwarm, colors=['blue', 'red'],
+    xvisible=True, yvisible=True, s=30,
+    label_points=True,
+    legend=True
+):
+    x_min, x_max = X[:, 0].min() - 0.25, X[:, 0].max() + 0.25
+    y_min, y_max = X[:, 1].min() - 0.25, X[:, 1].max() + 0.25
     xx, yy = np.meshgrid(np.linspace(x_min, x_max, 300),
                          np.linspace(y_min, y_max, 300))
-    
+
     Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, alpha=0.8, cmap=cmap)    
+    ax.contourf(xx, yy, Z, alpha=0.25, cmap=cmap)
 
-    for idx, val in enumerate(np.unique(y)):
-        ax.scatter(X[y == val, 0], X[y == val, 1], c=colors[idx], label=f'Class {val}', edgecolor='k', s=s)
-    
+    if y is not None:
+        for idx, val in enumerate(np.unique(y)):
+            ax.scatter(X[y == val, 0], X[y == val, 1], c=colors[idx], 
+                       label=f'Class {val}' if label_points else None, edgecolor='k', s=s)
+        if legend:
+            ax.legend()
+    else:
+        ax.scatter(X[:, 0], X[:, 1], c='black', edgecolor='k', s=s)
+
     if not xvisible:
         ax.get_xaxis().set_visible(False)
     if not yvisible:
         ax.get_yaxis().set_visible(False)
+
     ax.set_title(title)
-    ax.legend()
+
 
 
 def cross_validate(model_class, X, y, cv=5, scoring_metrics=None, seed=42, verbose=True, **model_params):
@@ -280,7 +293,12 @@ def plot_silhouette_chart(X, y, ax, n_clusters, title="Model Silhouette Chart"):
     ax.set_xlim([-0.1, 1])
 
 
-def visualize_clustering(X, y, centroids=None, ax=None, title="Model Clusters", xvisible=True, yvisible=True):
+def visualize_clustering(X, y, 
+                         centroids=None, 
+                         ax=None, title="Model Clusters", 
+                         xvisible=True, yvisible=True,
+                         label_points=True,
+                         legend=True):
 
     if ax is None:
         fig, ax = plt.subplots()
@@ -291,10 +309,9 @@ def visualize_clustering(X, y, centroids=None, ax=None, title="Model Clusters", 
 
     for i, label in enumerate(unique_labels):
         cluster_mask = (y == label)
-        
         ax.scatter(*X[cluster_mask].T,
                    color=colors[i],
-                   label=f"Cluster {label}",
+                   label=f"Cluster {label}" if label_points else None,
                    alpha=0.8)
         
     if centroids is not None and len(centroids) > 0:
@@ -305,7 +322,8 @@ def visualize_clustering(X, y, centroids=None, ax=None, title="Model Clusters", 
     ax.set_title(title)
     ax.set_xlabel("Feature 1")
     ax.set_ylabel("Feature 2")
-    ax.legend(title="Clusters")
+    if legend:
+        ax.legend(title="Clusters")
     if not xvisible:
         ax.get_xaxis().set_visible(False)
     if not yvisible:

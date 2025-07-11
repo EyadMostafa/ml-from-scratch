@@ -8,7 +8,6 @@ from .logistic_regression import LogisticRegression
 from .kmeans import KMeans
 from .dbscan import DBSCAN
 from .gaussian_mixture import GaussianMixture
-from utils.preprocessors import PCA
 
 
 __all__ = [
