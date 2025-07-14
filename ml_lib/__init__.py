@@ -1,13 +1,13 @@
-from .linear_svc import LinearSVC
-from .kernelized_svc import KernelizedSVC
-from .decision_tree import DecisionTreeClassifier
-from .bagging_classifier import BaggingClassifier
-from .adaptive_boost import AdaBoostClassifier
-from .linear_regression import LinearRegression, RidgeRegression, LassoRegression, ElasticNetRegression
-from .logistic_regression import LogisticRegression
-from .kmeans import KMeans
-from .dbscan import DBSCAN
-from .gaussian_mixture import GaussianMixture
+from .ml.linear_svc import LinearSVC
+from .ml.kernelized_svc import KernelizedSVC
+from .ml.decision_tree import DecisionTreeClassifier
+from .ml.bagging_classifier import BaggingClassifier
+from .ml.adaptive_boost import AdaBoostClassifier
+from .ml.linear_regression import LinearRegression, RidgeRegression, LassoRegression, ElasticNetRegression
+from .ml.logistic_regression import LogisticRegression
+from .ml.kmeans import KMeans
+from .ml.dbscan import DBSCAN
+from .ml.gaussian_mixture import GaussianMixture
 
 
 __all__ = [
