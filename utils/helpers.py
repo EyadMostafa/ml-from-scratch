@@ -132,7 +132,8 @@ def plot_decision_boundary(
     cmap=plt.cm.coolwarm, colors=['blue', 'red'],
     xvisible=True, yvisible=True, s=30,
     label_points=True,
-    legend=True
+    legend=True,
+    alpha=0.8
 ):
     x_min, x_max = X[:, 0].min() - 0.25, X[:, 0].max() + 0.25
     y_min, y_max = X[:, 1].min() - 0.25, X[:, 1].max() + 0.25
@@ -142,7 +143,7 @@ def plot_decision_boundary(
     Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, alpha=0.25, cmap=cmap)
+    ax.contourf(xx, yy, Z, alpha=alpha, cmap=cmap)
 
     if y is not None:
         for idx, val in enumerate(np.unique(y)):
