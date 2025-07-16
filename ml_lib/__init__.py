@@ -8,6 +8,7 @@ from .ml.logistic_regression import LogisticRegression
 from .ml.kmeans import KMeans
 from .ml.dbscan import DBSCAN
 from .ml.gaussian_mixture import GaussianMixture
+from .ml.naive_bayes import MultinomialNB
 
 
 __all__ = [
@@ -23,5 +24,6 @@ __all__ = [
     "LogisticRegression",
     "KMeans",
     "DBSCAN",
-    "GaussianMixture"
+    "GaussianMixture",
+    "MultinomialNB"
 ]
