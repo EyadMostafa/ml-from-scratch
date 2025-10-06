@@ -1,6 +1,5 @@
 import numpy as np
 from cvxopt import matrix, solvers
-from utils.helpers import validate_transform_input
 from .base_model import BaseModel
 
 class KernelizedSVC(BaseModel):

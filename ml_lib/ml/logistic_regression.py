@@ -59,7 +59,7 @@ class LogisticRegression(BaseModel):
             self._b = 0.0
             params = [self._w, self._b] if self._fit_intercept else [self._w]
 
-            result = gradient_descent(
+            self._w, self._b = gradient_descent(
                 gradient_fn=self._log_loss_gradient,
                 params=params,
                 features=X,
@@ -70,7 +70,6 @@ class LogisticRegression(BaseModel):
                 fit_intercept=self._fit_intercept
             )
 
-            self._w, self._b = result
             self._b = 0.0 if not self._fit_intercept else self._b
 
     
@@ -80,9 +79,7 @@ class LogisticRegression(BaseModel):
         X, _ = self._validate_transform_input(X)
         X = self._normalize(X)
 
-        z = X @ self._w + self._b
-
-        return 1 / (1 + np.exp(-z)) 
+        return self._compute_sigmoid(X, self._w, self._b) 
 
     def predict(self, X):
         return (self.predict_proba(X) >= 0.5).astype(int)
